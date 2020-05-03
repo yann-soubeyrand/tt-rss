@@ -1887,7 +1887,7 @@
 		if (PHP_OS === "Darwin") {
 			$ttrss_version['version'] = "UNKNOWN (Unsupported, Darwin)";
 		} else if (file_exists("$root_dir/version_static.txt")) {
-			$ttrss_version['version'] = trim(file_get_contents("$root_dir/version_static.txt")) . " (Unsupported)";
+			parse_version(trim(file_get_contents("$root_dir/version_static.txt")), $ttrss_version);
 		} else if (is_dir("$root_dir/.git")) {
 			$rc = 0;
 			$output = [];
@@ -1899,16 +1899,7 @@
 			chdir($cwd);
 
 			if (is_array($output) && count($output) > 0) {
-				list ($test, $timestamp, $commit) = explode(" ", $output[0], 3);
-
-				if ($test == "version:") {
-					$git_commit = $commit;
-					$git_timestamp = $timestamp;
-
-					$ttrss_version['version'] = strftime("%y.%m", $timestamp) . "-$commit";
-					$ttrss_version['commit'] = $commit;
-					$ttrss_version['timestamp'] = $timestamp;
-				}
+				parse_version($output[0], $ttrss_version);
 			}
 
 			if (!isset($ttrss_version['commit'])) {
@@ -1921,4 +1912,17 @@
 		}
 
 		return $ttrss_version['version'];
+	}
+
+	function parse_version($output, &$ttrss_version) {
+		list ($test, $timestamp, $commit) = explode(" ", $output, 3);
+
+		if ($test == "version:") {
+			$git_commit = $commit;
+			$git_timestamp = $timestamp;
+
+			$ttrss_version['version'] = strftime("%y.%m", $timestamp) . "-$commit";
+			$ttrss_version['commit'] = $commit;
+			$ttrss_version['timestamp'] = $timestamp;
+		}
 	}
